@@ -1,3 +1,4 @@
+import os
 import json
 import re
 import socket
@@ -5,7 +6,8 @@ import ssl
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-PORT = 8080
+PORT = int(os.environ.get("PORT", 8080))
+
 
 SUSPICIOUS_KEYWORDS = [
     r"urgent", r"immediately", r"suspended", r"unauthorized", r"verify your account",
@@ -405,6 +407,11 @@ async function runAnalysis() {
 """
 
 class RequestHandler(BaseHTTPRequestHandler):
+    def do_HEAD(self):
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.end_headers()
+
     def do_GET(self):
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -428,8 +435,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
 
 def run():
-    server = HTTPServer(("127.0.0.1", PORT), RequestHandler)
-    print(f"ScamShield Server running at http://127.0.0.1:{PORT}")
+    server = HTTPServer(("0.0.0.0", PORT), RequestHandler)
+    print(f"ScamShield Server running on port {PORT}")
     server.serve_forever()
 
 if __name__ == "__main__":
