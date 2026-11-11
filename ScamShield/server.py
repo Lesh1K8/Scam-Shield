@@ -260,7 +260,6 @@ HTML_PORTAL = """<!DOCTYPE html>
   <div class="nav-links">
     <a href="#scanner">Сканер</a>
     <a href="#pricing">Тарифы</a>
-    <a href="/admin">Вход для владельца</a>
     <button class="nav-cta" onclick="openCheckout('Pro Protection', '$5')">Оформить Pro ($5)</button>
   </div>
 </nav>
@@ -398,7 +397,7 @@ HTML_PORTAL = """<!DOCTYPE html>
 
 <footer>
   <div>© 2026 ScamShield Inc. • Global Cyber Threat Sentinel</div>
-  <div><a href="/admin">🔒 Вход в панель владельца (Admin)</a></div>
+  <div><span style="color:#334155;">Secure System Active</span></div>
 </footer>
 
 <script>
@@ -643,7 +642,17 @@ class RequestHandler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         
         if parsed.path == "/admin":
-            # Рендерим админку со свежими данными из БД
+            # Проверка секретного ключа доступа (пароля в ссылке)
+            query_params = urllib.parse.parse_qs(parsed.query)
+            provided_key = query_params.get("key", [""])[0]
+            
+            if provided_key != ADMIN_SECRET_KEY:
+                # Если зашел посторонний - показываем 404 (будто такой страницы вообще не существует в природе)
+                self.send_response(404)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(b"<h1>404 Not Found</h1><p>The requested URL was not found on this server.</p>")
+                return
             conn = sqlite3.connect(DB_PATH)
             c = conn.cursor()
             
